@@ -1,30 +1,23 @@
-# Use Python 3.11 slim image
-FROM python:3.11-slim
+FROM python:3.9-slim
 
-# Set working directory inside the container
 WORKDIR /app
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
-    build-essential \
-    libpq-dev \
+    postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy only requirements first for caching
+# Copy requirements and install Python dependencies
 COPY backend/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Upgrade pip and install Python dependencies
-RUN pip install --upgrade pip \
-    && pip install --no-cache-dir -r requirements.txt
-
-# Copy the backend project files
+# Copy the backend application
 COPY backend/ .
-
-# Set environment variable
-ENV PYTHONUNBUFFERED=1
 
 # Expose port
 EXPOSE 8000
 
-# Command to run the Django development server
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+# Run migrations and start gunicorn
+CMD python manage.py migrate && \
+    python manage.py collectstatic --noinput && \
+    gunicorn config.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120
