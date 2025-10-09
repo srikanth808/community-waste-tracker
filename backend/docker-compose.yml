@@ -1,10 +1,12 @@
+version: '3.8'
+
 services:
   db:
     image: postgres:13
     environment:
-      POSTGRES_DB: railway
+      POSTGRES_DB: waste_tracker
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: lpDNDQSIHNhRufgJOremhhXOaskgpGfE
+      POSTGRES_PASSWORD: postgres123
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
@@ -16,8 +18,8 @@ services:
       retries: 5
 
   backend:
-    build: .
-    command: python backend/manage.py runserver 0.0.0.0:8000
+    build: ./backend
+    command: python manage.py runserver 0.0.0.0:8000
     volumes:
       - ./backend:/app
     ports:
@@ -27,7 +29,7 @@ services:
         condition: service_healthy
     environment:
       - DEBUG=1
-      - DATABASE_URL=postgresql://postgres:lpDNDQSIHNhRufgJOremhhXOaskgpGfE@postgres.railway.internal:5432/railway
+      - DATABASE_URL=postgresql://postgres:postgres123@db:5432/waste_tracker
       - SECRET_KEY=dev-secret-key-change-in-production
 
   frontend:
